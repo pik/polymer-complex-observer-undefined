@@ -1,0 +1,74 @@
+<link rel="import" href="../polymer/polymer.html">
+<!--
+`polymer-complex-observer-undefined"`
+@demo demo/index.html
+-->
+
+<dom-module id="polymer-complex-observer-undefined">
+  <template>
+    <style>
+      :host {
+        display: block;
+        margin-top: 0.4em;
+        border: 0.1em solid black;
+        border-radius: 1em;
+      }
+      .name-body {
+        font-size: 1.2em;
+      }
+      .body {
+        margin: 0.4em;
+      }
+    </style>
+    <div class="body">
+      <div class="name-body">[[name]]</div>
+    <template is="dom-if" if="[[showChildren]]">
+      <polymer-complex-observer-undefined name="child" has-parent=true></polymer-complex-observer-undefined>
+    </template>
+    <!-- Remove me to trigger buggy behavior -->
+
+  </template>
+
+  <script>
+    window.__registeredObservers = new Set()
+    Polymer({
+
+      is: 'polymer-complex-observer-undefined',
+      properties: {
+        prop: {
+          type: Object,
+          value() { return {} },
+        },
+        showChildren: {
+          type: Boolean,
+          value: false
+        },
+        hasParent: {
+          type: Boolean,
+          value: false
+        }
+      },
+      attached() {
+        if (!__registeredObservers.has(this.constructor)) {
+          __registeredObservers.add(this.constructor)
+          this._addComplexObserverEffect('_testObserver(prop.*)')
+        }
+        // Only seems to happen for elements which are not attached (visible) initially
+        if (!this.hasParent) {
+          setTimeout(() => {
+            this.showChildren = true
+          }, 1000)
+        }
+      },
+
+      _testObserver(changes) {
+        console.log('in testObserver', this.name, changes)
+        if (changes.base === undefined) {
+          // Throw error on unexpected behavior
+          throw('Changes.base should not be undefined')
+        }
+      }
+
+    });
+  </script>
+</dom-module>
